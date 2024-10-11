@@ -1,0 +1,16 @@
+[
+  {
+    "label": "Run main.py",
+    "command": "~/miniconda3/envs/default/bin/python",
+    "args": ["main.py"],
+    "use_new_terminal": false,
+    "shell": "system"
+  },
+  {
+    "label": "Run current file",
+    "command": "~/miniconda3/envs/default/bin/python",
+    "args": ["$ZED_FILE"],
+    "use_new_terminal": false,
+    "shell": "system"
+  }
+]

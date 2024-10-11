@@ -1,7 +1,6 @@
-#!/Users/steve/miniconda3/bin/python
-# working with the base install of conda
+import sys
 
-import pandas as pd
+import polars as pl
 from matplotlib import pyplot as plt
 from statsmodels.tsa.seasonal import seasonal_decompose
 
@@ -9,26 +8,34 @@ from statsmodels.tsa.seasonal import seasonal_decompose
 # individual_household_electric_power_consumption = fetch_ucirepo(id=235)
 # X = individual_household_electric_power_consumption.data.features
 
-# so downloaded my own copy
-X = pd.read_csv(
-    "household_power_consumption.txt",
-    sep=";",
-    header=0,
-    usecols=["Date", "Time", "Global_active_power"],
-    # nrows=1000,
-    dtype={"Date": str, "Time": str, "Global_active_power": float},
-    na_values=["?"],
+
+# Import just power, rename, specify data types, and deal with missing values
+X = pl.read_csv(
+    "./household_power_consumption.txt",
+    columns=["Date", "Time", "Global_active_power"],
+    new_columns=["date", "time", "power"],
+    schema=pl.Schema(
+        {"Date": pl.Date, "Time": pl.Time, "Global_active_power": pl.Float32}
+    ),
+    truncate_ragged_lines=True,
+    separator=";",
+    has_header=True,
+    null_values=["?"],
 )
-# Fix the date and time columns, and convert to index
-X["Date"] = pd.to_datetime(X["Date"], format="%d/%m/%Y")
-X["Time"] = pd.to_timedelta(X["Time"])
-X["DateTime"] = X["Date"] + X["Time"]
-X.set_index("DateTime", inplace=True)
-X.drop(columns=["Date", "Time"], inplace=True)
+
+# Combine date and time columns into a datetime column
+X = X.with_columns(
+    [
+        pl.col("date").dt.combine(pl.col("time")).alias("datetime"),
+    ]
+)
+X = X.drop(["date", "time"])
+X = X.select(["datetime", "power"])
+
 
 # Plot the time series graph
 plt.figure(figsize=(12, 4))
-plt.plot(X.index, X["Global_active_power"])
+plt.plot(X["datetime"], X["power"])
 plt.title("Global Active Power Over Time")
 plt.xlabel("Date")
 plt.ylabel("Global Active Power")
@@ -37,16 +44,22 @@ plt.show()
 
 # Seasonal decomposition fails with missing values
 # Count missing rows
-missing_rows = X["Global_active_power"].isna().sum()
+missing_rows = X["power"].is_null().sum()
 print(f"Number of missing rows: {missing_rows}")
 # So fill missing values with the previous non-missing value
-X.ffill(inplace=True)
-X.head()
+X = X.fill_null(strategy="forward")
 # Quick slice of the data to test seasonal decomposition
 X1 = X.head(2 * 60 * 24 * 7)
 
+X1 = X1.to_pandas()
+X1.set_index("datetime")
 # remove the weekly seasonality
-weekly_decomposition = seasonal_decompose(X1, model="additive", period=60 * 24 * 7)
+weekly_decomposition = seasonal_decompose(
+    X1,
+    model="additive",
+    period=60 * 24 * 7,
+    two_sided=False,
+)
 weekly_trend = weekly_decomposition.trend
 weekly_decomposition.plot()
 
@@ -73,3 +86,6 @@ weekly_seasonal = weekly_decomposition.seasonal
 
 residual = raw - trend - hourly_seasonal - daily_seasonal - weekly_seasonal
 residual.plot()
+
+print("Success")
+sys.exit()
