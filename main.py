@@ -11,6 +11,7 @@ START_DATE = "2008-01-01"
 END_DATE = "2008-01-21"
 WEEK_PERIOD = 60 * 24 * 7
 DAY_PERIOD = 60 * 24
+H12_PERIOD = 60 * 12
 HOUR_PERIOD = 60
 
 plt.rcParams["savefig.dpi"] = 300
@@ -53,8 +54,19 @@ if __name__ == "__main__":
     plt.title("Daily Seasonal")
     plt.savefig("./figs/daily_decomposition.png")
 
+    h12_decomposition = seasonal_decompose(
+        daily_trend.dropna(), model="additive", period=H12_PERIOD, two_sided=False
+    )
+    h12_trend = h12_decomposition.trend
+    Y = h12_decomposition.seasonal.to_frame(name="power")
+    fig, ax = plt.subplots(figsize=(24, 4))
+    ax.set_xlim(np.datetime64(START_DATE), np.datetime64(END_DATE))
+    ax.scatter(Y.index, Y["power"], color="red", s=0.01)
+    plt.title("Twice Daily Seasonal")
+    plt.savefig("./figs/h12_decomposition.png")
+
     hourly_decomposition = seasonal_decompose(
-        daily_trend.dropna(), model="additive", period=HOUR_PERIOD, two_sided=False
+        h12_trend.dropna(), model="additive", period=HOUR_PERIOD, two_sided=False
     )
     hourly_trend = hourly_decomposition.trend
     Y = hourly_decomposition.seasonal.to_frame(name="power")
@@ -68,6 +80,7 @@ if __name__ == "__main__":
     residual = (
         power
         - hourly_trend
+        - h12_decomposition.seasonal
         - hourly_decomposition.seasonal
         - daily_decomposition.seasonal
         - weekly_decomposition.seasonal
