@@ -2,3 +2,16 @@
 //
 // For a full list of overridable settings, and general information on folder-specific settings,
 // see the documentation: https://zed.dev/docs/configuring-zed#settings-files
+{
+  "jupyter": {
+    "kernel_selections": {
+      // https://zed.dev/docs/repl
+      // python -m ipykernel install --user --name default --display-name "Python (conda-default)"
+      // Installed kernelspec default in /Users/steve/Library/Jupyter/kernels/default
+      "python": "default"
+      // "typescript": "deno",
+      // "javascript": "deno",
+      // "r": "ark"
+    }
+  }
+}
