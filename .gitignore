@@ -5,3 +5,4 @@ retail_sales_used_car_dealers_us_1992_2020.csv
 # pixi environments
 .pixi
 *.egg-info
+.ipynb_checkpoints

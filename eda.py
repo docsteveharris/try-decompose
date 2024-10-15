@@ -16,5 +16,4 @@ def plot_timeseries(X):
 
     plt.savefig("./figs/timeseries.png")
     print("New plot saved to ./figs/timeseries.png")
-    plt.close()
-    return 0
+    return plt

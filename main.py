@@ -2,8 +2,8 @@ import matplotlib.pyplot as plt
 import numpy as np
 from statsmodels.tsa.seasonal import seasonal_decompose
 
-from analyse_data import plot_timeseries
 from clean_data import clean_data, fill_missing_values, filter_timeseries
+from eda import plot_timeseries
 from load_data import get_data_from_uci
 
 DATA_PATH = "./data/household_power_consumption.txt"
